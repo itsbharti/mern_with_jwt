@@ -45,7 +45,7 @@ userSchema.pre('save', async function(next) {
 })
 
 // check if these methods are working as expected
-userSchema.method = {
+userSchema.methods = {
     // method for generating the  jwt token
     jwtToken(){
         return JWT.sign({id: this.id, email: this.email},
