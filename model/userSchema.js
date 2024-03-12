@@ -54,7 +54,7 @@ userSchema.methods = {
         )  
     },
     // userschema method for generating and return the forgotpassword token
-    getForgotPassword() {
+    getForgotPasswordToken() {
         const forgotToken = crypto.randomBytes(20).toString('hex')
         // step - save to database
         this.forgotPasswordToken = crypto.createHash('sha256').update(forgotToken).digest('hex')

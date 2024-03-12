@@ -58,7 +58,7 @@ const signUp = async (req, res) => {
         }
         return res.status(500).json({
             success: false,
-            message: error.message,
+            message: error.message
         })
 
     }
@@ -116,5 +116,113 @@ const signIn = async (req, res, next) => {
     }
 }
 
+////////////////////
+/* 
+@FORGOTPASSWORD
+@route- /api/auth/forgotpassword
+@method- post
+@description- get the token for forgot passwrd
+@returns - forgotPassword Token
+*/
 
-module.exports = {signUp, signIn}
+const forgotPassword = async(req, res, next) =>  {
+    const email = req.body.email
+    // return response with err msg if the email is missing
+    if(!email) {
+        return res.status(400).json({
+            success:false,
+            message:'Email is required'
+        })
+    }
+
+    try{
+        // retrieve user using given email
+        const user = await userModel.findOne({email})
+        // ifuser is not found then send the err msg
+        if(!user){
+            return res.status(400).json({
+                success: false,
+                message:'Email not found'
+            })
+        }
+
+        // create reset token
+        const forgotPasswordToken = user.getForgotPasswordToken()
+        await user.save()
+        res.status(200).json({
+            success:true,
+            data: forgotPasswordToken,
+        })
+    }catch(error){
+        res.status(500).json({
+            success:false,
+            message: error.message,
+        })
+    }
+}
+
+/////////////////////
+/* 
+@RESETPASSWORD
+@route - /api/auth/resetpassword/:token
+@method- post
+@description - update password
+@return - user objcet
+*/
+
+const resetPassword = async(req, res, next) => {
+    const {token} = req.params
+    const { password, confirmPassword } = req.body
+    res.send(req.params.token)
+
+    // return error message if password or confirmPassword is missing
+    if (!password || !confirmPassword) {
+        return res.status(400).json({
+         success: false,
+         message: 'password and confirmPassword is required😬',
+    })
+    }
+
+    // return err msg if password and cnfrmpassword are not matched
+    if(password !== confirmPassword){
+        return res.status(400).json({
+            success:false,
+            message:'password and confirm Password does not match ❌'
+        })
+    }
+
+    const hashToken = crypto.createHash('sha256').update(token).digest('hex')
+
+    try{
+        const user = await userModel.findOne({
+            forgotPasswordToken: hashToken,
+            forgotPasswordExpiryDate: {
+                $gt: new Date() //forgotPasswordExpiryDate() shouldd be less than current date
+            }
+        })
+
+        // return the msg if the user is not found
+        if(!user) {
+            return res.status(400).json({
+                success: false,
+                message:'Invalid Token or token is expired☹️'
+            })
+        }
+
+        user.password = password
+        await user.save()
+
+        return res.status(200).json({
+            success:true,
+            message:'Successfully reset the password'
+        })
+    }catch(error){
+        return res.status(400).json({
+            success:false,
+            message: error.message
+        })
+    }
+  
+}
+
+module.exports = {signUp, signIn, forgotPassword, resetPassword}
