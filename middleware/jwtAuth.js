@@ -19,6 +19,7 @@ const jwtAuth = (req, res, next) => {
         return res.status(400).json({success:false, message:'Unauthenticated'})
         
     }
-
     next()
 }
+
+module.exports = jwtAuth

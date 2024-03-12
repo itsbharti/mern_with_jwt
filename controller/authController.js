@@ -225,4 +225,57 @@ const resetPassword = async(req, res, next) => {
   
 }
 
-module.exports = {signUp, signIn, forgotPassword, resetPassword}
+///////////////////////////////
+/* 
+@LOGOUT
+@route - /api/auth/logout
+@method - Get
+@description - remove the token form cookie
+@returns - logout message and cookie without token
+*/
+
+const logout = async (req, res, next) => {
+    try{
+        const cookieOption ={
+            expires: new Date(), // current expiry date
+            httpOnly:true 
+        };
+
+        // return response with cookie without token
+        res.cookie("token", null, cookieOption);
+        res.status(200).json({
+            success:true,
+            message: "Logged Out"
+        });
+    }catch(error){
+        res.status(400).json({
+            success: false,
+            message: error.message
+        })
+
+    }
+}
+/* 
+@GETUSER
+@route - /api/auth/getUSer
+@method - Get
+@description - recover user data frm mongoDB if user is valid(jwt auth)
+@returns - user object
+ */
+const getUser = async(req, res, next)=> {
+    const userId = req.user.id;
+    try{
+        const user = await userModel.findById(userId)
+        return res.status(200).json({
+            success:true,
+            data:user
+        });
+    } catch(error){
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+module.exports = {signUp, signIn, forgotPassword, resetPassword, logout, getUser}
