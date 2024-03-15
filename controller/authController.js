@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 // const cookie = require('cookie-parser')
 const crypto = require('crypto')
 const emailValidator = require('email-validator')
-
+const JWT = require('jsonwebtoken')
 /* 
 @signup 
 @route - /api/auth/signup
@@ -13,7 +13,7 @@ const emailValidator = require('email-validator')
 @body - name, email, password, confirmPassword
 @return user object */
 
-const signUp = async (req, res) => {
+const signUp = async (req, res,next) => {
     const {name, email, password, confirmPassword} = req.body
     // every field is required
     if(!name || !email || !password || !confirmPassword) {
@@ -48,7 +48,7 @@ const signUp = async (req, res) => {
             message:'User Created Successfully',
             data: result
         })
-    }catch{
+    }catch(error){
         // send err msg user is already exist 
         if(error.code === 11000) {
             return res.status(400).json({
@@ -263,19 +263,24 @@ const logout = async (req, res, next) => {
 @returns - user object
  */
 const getUser = async(req, res, next)=> {
-    const userId = req.user.id;
-    try{
-        const user = await userModel.findById(userId)
+   const token = (req.cookies && req.cookies.token) || null
+   if(!token){
+    return res.status(400).json({success:false, message:'Not authorized'})
+   }
+
+   //verifying the token
+   try{
+        const payload = JWT.verify(token, process.env.SECRET)
+        req.user = {id: payload.id, email: payload.email}
+        const user = await userModel.findById(payload.id)
         return res.status(200).json({
             success:true,
             data:user
-        });
-    } catch(error){
-        return res.status(400).json({
-            success: false,
-            message: error.message
         })
-    }
+   } catch(error){
+    return res.status(400).json(
+        {success:false, message: error.message})
+   }
 }
 
 module.exports = {signUp, signIn, forgotPassword, resetPassword, logout, getUser}

@@ -14,9 +14,9 @@ const jwtAuth = (req, res, next) => {
     try{
         const payload = JWT.verify(token, process.env.SECRET)
         req.user = {id:payload.id, email:payload.email}
-    }catch {
+    }catch(error) {
         // return err response
-        return res.status(400).json({success:false, message:'Unauthenticated'})
+        return res.status(400).json({success:false, message:error.message})
         
     }
     next()

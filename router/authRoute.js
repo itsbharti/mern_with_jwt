@@ -12,6 +12,6 @@ authRouter.post('/forgotpassword', forgotPassword)
 authRouter.post('/resetpassword/:token', resetPassword)
 
 authRouter.get('/logout',jwtAuth, logout)
-authRouter.get('/user',jwtAuth, getUser)
+authRouter.get('/user', getUser)
 
 module.exports = authRouter
